@@ -1,26 +1,28 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import LoginPage from "./components/pages/LoginPage";
+import {useAuth} from "./contexts/AuthContext";
+import ProfilePage from "./components/pages/ProfilePage";
+import {Navigate, Routes, Route} from "react-router-dom";
+import routes from "./routes";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+const App = () => {
+    const { isLoggedIn } = useAuth();
+
+    return (
+        <div>
+            <Routes>
+                <Route
+                    path={routes.profilePagePath()}
+                    element={isLoggedIn ? <ProfilePage /> : <Navigate to={routes.loginPagePath()} />}
+                />
+                <Route
+                    path={routes.loginPagePath()}
+                    element={isLoggedIn ? <Navigate to={routes.profilePagePath()} /> : <LoginPage />}
+                />
+            </Routes>
+        </div>
   );
-}
+};
 
 export default App;
