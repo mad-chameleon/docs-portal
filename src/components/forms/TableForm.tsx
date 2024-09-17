@@ -1,169 +1,141 @@
-import {Alert, Box, Button, CircularProgress, TextField} from "@mui/material";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../../store";
-import {FormikHelpers, useFormik} from "formik";
-import * as Yup from "yup";
-import { hideModal } from "../../store/slices/modalSlice";
-import {addRow, editRow} from "../../store/slices/tableSlice";
-import React, {useState} from "react";
-import {ErrorOutline} from "@mui/icons-material";
-import {chunkArray} from "../../utils";
-import {tableData} from "../../data";
-
-interface FormValues {
-    companySigDate: string;
-    companySignatureName: string;
-    documentName: string;
-    documentStatus: string;
-    documentType: string;
-    employeeNumber: string;
-    employeeSigDate: string;
-    employeeSignatureName: string;
-};
-
-const tableColumns = [
-    { title: 'Company Signature Date', key: 'companySigDate', type: 'datetime-local', shrink: true },
-    { title: 'Company Signature Name', key: 'companySignatureName' },
-    { title: 'Document Name', key: 'documentName' },
-    { title: 'Document Status', key: 'documentStatus' },
-    { title: 'Document Type', key: 'documentType' },
-    { title: 'Employee Number', key: 'employeeNumber' },
-    { title: 'Employee Signature Date', key: 'employeeSigDate', type: 'datetime-local', shrink: true },
-    { title: 'Employee Signature Name', key: 'employeeSignatureName' },
-];
+import {
+  Alert, Box, Button, CircularProgress, TextField,
+} from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
+import { useFormik, FormikHelpers } from 'formik';
+import * as Yup from 'yup';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ErrorOutline } from '@mui/icons-material';
+import { hideModal } from '../../store/slices/modalSlice';
+import { RootState } from '../../store';
+import { chunkArray, formatValuesForServer, formatRow } from '../../utils';
+import tableColumnsData from '../../tableColumnsData';
+import routes from '../../routes';
+import api from '../../api';
+import { addRow, editRow } from '../../store/slices/tableSlice';
+import { FormValues } from '../../interfaces';
 
 const TableForm = () => {
-    const dispatch = useDispatch();
-    const { currentRowId, modalType } = useSelector((state: RootState) => state.modal);
-    const rows = useSelector((state: RootState) => state.table.tableData);
-    const editedRow = currentRowId !== null ? rows[currentRowId] : null;
+  const dispatch = useDispatch();
+  const { currentRowId, modalType } = useSelector((state: RootState) => state.modal);
+  const rows = useSelector((state: RootState) => state.table.tableData);
+  const editedRow = useMemo(() => (currentRowId ? rows
+    .find((row) => row.id === currentRowId) : null), [currentRowId, rows]);
 
-    const [formState, setFormState] = useState({
-        isError: false,
-        errorMessage: '',
-    });
-    const [loading, setLoading] = useState(true);
+  const [formState, setFormState] = useState({
+    isError: false,
+    errorMessage: '',
+  });
 
-    const chunkedRows = chunkArray(tableColumns, 2);
+  const getInitialValues = useCallback((): FormValues => (
+    editedRow || {
+      companySigDate: '',
+      companySignatureName: '',
+      documentName: '',
+      documentStatus: '',
+      documentType: '',
+      employeeNumber: '',
+      employeeSigDate: '',
+      employeeSignatureName: '',
+    }
+  ), [editedRow]);
 
-    const initialValues: FormValues = editedRow || {
-        companySigDate: '',
-        companySignatureName: '',
-        documentName: '',
-        documentStatus: '',
-        documentType: '',
-        employeeNumber: '',
-        employeeSigDate: '',
-        employeeSignatureName: '',
-    };
+  const validationSchema = useMemo(() => Yup.object(
+    tableColumnsData.reduce((schema, column) => {
+      // eslint-disable-next-line no-param-reassign
+      schema[column.key] = Yup.string().required(column.errorMessage);
+      return schema;
+    }, {} as Record<string, Yup.StringSchema>),
+  ), []);
 
-    const validationSchema = Yup.object(
-        Object.keys(tableData).reduce((schema, key) => {
-            const field = tableData[key];
-            schema[key] = Yup.string().required(field.errorMessage);
-            return schema;
-        }, {} as Record<string, Yup.StringSchema>)
-    );
+  // eslint-disable-next-line max-len
+  const handleFormSubmit = useCallback(async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+    setSubmitting(true);
+    try {
+      const formattedValues = formatValuesForServer(values);
+      const url = modalType === 'add' ? routes.addRow() : routes.editRow(currentRowId as string);
+      const response = await api.post(url, formattedValues);
+      const formattedRow = formatRow(response.data.data);
+      if (modalType === 'add') {
+        dispatch(addRow(formattedRow));
+      } else if (currentRowId !== null) {
+        dispatch(editRow(formattedRow));
+      }
+      dispatch(hideModal());
+    } catch (error) {
+      setFormState({
+        isError: true,
+        errorMessage: 'Ошибка сохранения данных. Попробуйте позже.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [dispatch, modalType, currentRowId]);
 
-    const formik = useFormik<FormValues>({
-        initialValues,
-        validationSchema,
-        onSubmit: async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
-            // if (modalType === 'add') {
-            //     dispatch(addRow(values))
-            // } else {}
-            // if (currentRowId !== null) {
-            //     dispatch(editRow({ index: currentRowId, updatedRow: values }));
-            // }
-            // dispatch(hideModal());
+  const formik = useFormik<FormValues>({
+    initialValues: getInitialValues(),
+    validationSchema,
+    onSubmit: handleFormSubmit,
+    enableReinitialize: true,
+  });
 
-            if (modalType === 'add') {
-                await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 секунды задержки
-                dispatch(addRow(values));
-            }
-
-            if (currentRowId !== null) {
-                await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 секунды задержки
-                dispatch(editRow({ index: currentRowId, updatedRow: values }));
-            }
-
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 секунда задержки
-            // dispatch(hideModal());
-
-        //     setSubmitting(true);
-        //     try {
-        //         await new Promise((_, reject) => {
-        //             setTimeout(() => {
-        //                 reject(new Error('kjj'));
-        //             }, 2000);
-        //         });
-        //     } catch(err) {
-        //         setFormState({ isError: true, errorMessage: 'Ошибка сети. Попробуйте позже.'})
-        //         setSubmitting(false);
-        //     }
-        },
-        enableReinitialize: true,
-    });
-
-    return (
-        <Box
-            sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 600,
-                backgroundColor: 'background.paper',
-                boxShadow: 24,
-                p: 4,
-                borderRadius: 4,
-            }}
+  return (
+    <>
+      <h2 id="edit-modal-title">{modalType === 'edit' ? 'Редактировать строку' : 'Добавить строку'}</h2>
+      {formState.isError && (
+        <Alert icon={<ErrorOutline fontSize="inherit" />} severity="error">
+          {formState.errorMessage}
+        </Alert>
+      )}
+      <form onSubmit={formik.handleSubmit} noValidate>
+        {chunkArray(tableColumnsData, 2).map((row) => (
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }} key={row[0].key}>
+            {row.map((col) => (
+              <TextField
+                key={col.key}
+                type={col.type || 'text'}
+                name={col.key as keyof FormValues}
+                label={col.title}
+                fullWidth
+                margin="normal"
+                value={formik.values[col.key as keyof FormValues]}
+                onChange={formik.handleChange}
+                error={
+                  // eslint-disable-next-line max-len
+                  formik.touched[col.key as keyof FormValues] && Boolean(formik.errors[col.key as keyof FormValues])
+              }
+                helperText={
+                  // eslint-disable-next-line max-len
+                  formik.touched[col.key as keyof FormValues] && formik.errors[col.key as keyof FormValues]
+              }
+                slotProps={col.shrink ? {
+                  inputLabel: {
+                    shrink: true,
+                  },
+                } : undefined}
+              />
+            ))}
+          </Box>
+        ))}
+        <Box sx={{
+          mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2,
+        }}
         >
-            <h2 id="edit-modal-title">{modalType === 'edit' ? 'Редактировать строку': 'Добавить строку'}</h2>
-            {formState.isError && <Alert icon={<ErrorOutline fontSize="inherit" />} severity="error">
-                {formState.errorMessage}
-            </Alert>}
-            <form onSubmit={formik.handleSubmit} noValidate>
-                {chunkedRows.map((row, rowIndex) => (
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }} key={rowIndex}>
-                        {row.map((col) => (
-                            <TextField
-                                key={col.key}
-                                type={col.type || 'text'}
-                                name={col.key as keyof FormValues} // Указание типа ключа
-                                label={col.title}
-                                fullWidth
-                                margin="normal"
-                                value={formik.values[col.key as keyof FormValues]} // Указание типа ключа
-                                onChange={formik.handleChange}
-                                error={formik.touched[col.key as keyof FormValues] && Boolean(formik.errors[col.key as keyof FormValues])} // Указание типа ключа
-                                helperText={formik.touched[col.key as keyof FormValues] && formik.errors[col.key as keyof FormValues]} // Указание типа ключа
-                                slotProps={ col.shrink ? {
-                                    inputLabel: {
-                                        shrink: true,
-                                    }
-                                } : undefined }
-                            />
-                        ))}
-                    </Box>
-                ))}
-
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                    <Button variant="contained" color="secondary" onClick={() => dispatch(hideModal())}>
-                        Отменить
-                    </Button>
-                    <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
-                        {formik.isSubmitting ? (
-                            <>
-                                <CircularProgress size={24} sx={{ color: 'white', mr: 2 }} />
-                                Подождите...
-                            </>
-                        ) : modalType === 'edit' ? 'Сохранить' : 'Добавить'}
-                    </Button>
-                </Box>
-            </form>
+          <Button variant="contained" color="secondary" onClick={() => dispatch(hideModal())}>
+            Отменить
+          </Button>
+          <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
+            {formik.isSubmitting ? (
+              <>
+                <CircularProgress size={24} sx={{ color: 'white', mr: 2 }} />
+                Подождите...
+              </>
+            ) : modalType === 'edit' ? 'Сохранить' : 'Добавить'}
+          </Button>
         </Box>
-    );
+      </form>
+    </>
+  );
 };
 
 export default TableForm;

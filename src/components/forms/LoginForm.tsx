@@ -1,106 +1,124 @@
-import React, {useRef, FC, useState} from 'react';
+import React, { useRef, FC, useState } from 'react';
 import { useFormik, FormikHelpers } from 'formik';
-import {TextField, Button, Typography, Box, CircularProgress} from '@mui/material';
+import {
+  TextField, Button, Typography, Box, CircularProgress,
+} from '@mui/material';
 import * as Yup from 'yup';
+import axios from 'axios';
+import routes from '../../routes';
+import { useAuth } from '../../contexts/AuthContext';
+import api from '../../api';
 
-interface FormValues {
+interface LoginFormValues {
     username: string;
     password: string;
-};
+}
 
 const LoginForm: FC = () => {
-    const inputRef = useRef<HTMLInputElement | null>(null);
-    const [formState, setFormState] = useState({
-        isError: false,
-        errorMessage: '',
-    });
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [formState, setFormState] = useState({
+    isError: false,
+    errorMessage: '',
+  });
 
-    const formik = useFormik<FormValues>({
-        initialValues: {
-            username: '',
-            password: '',
-        },
+  const { logIn } = useAuth();
 
-        validationSchema: Yup.object({
-            username: Yup.string().required('Введите ваш ник'),
-            password: Yup.string().required('Введите пароль'),
-        }),
+  const formik = useFormik<LoginFormValues>({
+    initialValues: {
+      username: '',
+      password: '',
+    },
 
-        onSubmit: async(values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
-            setSubmitting(true);
-            try {
-                await new Promise((_, reject) => {
-                    setTimeout(() => {
-                        reject(new Error('kjj'));
-                    }, 2000);
-                });
-            } catch(err) {
-                setFormState({ isError: true, errorMessage: 'Неверные имя пользователя или пароль'})
-                setSubmitting(false);
-            }
+    validationSchema: Yup.object({
+      username: Yup.string().required('Введите ваш ник'),
+      password: Yup.string().required('Введите пароль'),
+    }),
 
-        },
-    });
+    // eslint-disable-next-line
+    onSubmit: async (values: LoginFormValues, { setSubmitting }: FormikHelpers<LoginFormValues>) => {
+      setSubmitting(true);
+      try {
+        const response = await api.post(routes.signIn(), values);
 
-    return (
-        <Box
-            component="form"
-            onSubmit={formik.handleSubmit}
-            noValidate
-            sx={{ mt: 1 }}
-        >
-            <Typography variant="h3" component="h1" align="center" gutterBottom>
-                Войти
-            </Typography>
+        if (response.data.error_code) {
+          if (response.data.error_code === 2004) {
+            setFormState({ isError: true, errorMessage: 'Неверные имя пользователя или пароль.' });
+            return;
+          }
+          setFormState({ isError: true, errorMessage: 'Неизвестная ошибка. Попробуйте позже.' });
+          return;
+        }
 
-            <TextField
-                inputRef={inputRef}
-                fullWidth
-                label="Ваш ник"
-                margin="normal"
-                disabled={formik.isSubmitting}
-                error={formik.touched.username && Boolean(formik.errors.username)}
-                helperText={formik.touched.username && formik.errors.username}
-                {...formik.getFieldProps('username')}
-            />
+        logIn(response.data.data.token);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          setFormState({ isError: true, errorMessage: 'Ошибка сети. Попробуйте позже.' });
+          return;
+        }
+        setFormState({ isError: true, errorMessage: 'Неизвестная ошибка. Попробуйте позже.' });
+      }
+    },
+  });
 
-            <TextField
-                fullWidth
-                label="Пароль"
-                type="password"
-                margin="normal"
-                disabled={formik.isSubmitting}
-                error={formik.touched.password && Boolean(formik.errors.password)}
-                helperText={formik.touched.password && formik.errors.password}
-                {...formik.getFieldProps('password')}
-            />
+  return (
+    <Box
+      component="form"
+      onSubmit={formik.handleSubmit}
+      noValidate
+      sx={{ mt: 1 }}
+    >
+      <Typography variant="h3" component="h1" align="center" gutterBottom>
+        Войти
+      </Typography>
 
-            {formState.isError && (
-                <Typography color="error" variant="body2">
-                    {formState.errorMessage}
-                </Typography>
-            )}
+      <TextField
+        inputRef={inputRef}
+        fullWidth
+        label="Ваш ник"
+        margin="normal"
+        disabled={formik.isSubmitting}
+        error={formik.touched.username && Boolean(formik.errors.username)}
+        helperText={formik.touched.username && formik.errors.username}
+        {...formik.getFieldProps('username')}
+      />
 
-            <Button
-                size={"large"}
-                variant="contained"
-                color="primary"
-                type="submit"
-                fullWidth
-                sx={{ mt: 3 }}
-                disabled={formik.isSubmitting}
-            >
-                {formik.isSubmitting ? (
-                    <>
-                        <CircularProgress size={24} sx={{ color: 'white', mr: 2 }} />
-                        Подождите...
-                    </>
-                ) : (
-                    'Войти'
-                )}
-            </Button>
-        </Box>
-    );
+      <TextField
+        fullWidth
+        label="Пароль"
+        type="password"
+        margin="normal"
+        disabled={formik.isSubmitting}
+        error={formik.touched.password && Boolean(formik.errors.password)}
+        helperText={formik.touched.password && formik.errors.password}
+        {...formik.getFieldProps('password')}
+      />
+
+      {formState.isError && (
+        <Typography color="error" variant="body2">
+          {formState.errorMessage}
+        </Typography>
+      )}
+
+      <Button
+        size="large"
+        variant="contained"
+        color="primary"
+        type="submit"
+        fullWidth
+        sx={{ mt: 3 }}
+        disabled={formik.isSubmitting}
+      >
+        {formik.isSubmitting ? (
+          <>
+            <CircularProgress size={24} sx={{ color: 'white', mr: 2 }} />
+            Подождите...
+          </>
+        ) : (
+          'Войти'
+        )}
+      </Button>
+    </Box>
+  );
 };
 
 export default LoginForm;

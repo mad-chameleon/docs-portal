@@ -1,39 +1,35 @@
-import {format, parseISO} from "date-fns";
+import { DataRow, FormValues } from './interfaces';
 
-
-interface DataRow {
-    companySigDate: string;
-    companySignatureName: string;
-    documentName: string;
-    documentStatus: string;
-    documentType: string;
-    employeeNumber: string;
-    employeeSigDate: string;
-    employeeSignatureName: string;
-}
-
-export const chunkArray = (array: { title: string, key: string, type?: string, shrink?: boolean }[], chunkSize: number) => {
-    const result = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-        result.push(array.slice(i, i + chunkSize));
+export const chunkArray = <T>(array: T[], chunkSize: number): T[][] => {
+  const result: T[][] = [];
+  array.forEach((_, index) => {
+    if (index % chunkSize === 0) {
+      result.push(array.slice(index, index + chunkSize));
     }
-    return result;
+  });
+  return result;
+};
+const isoToDateTimeLocal = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toISOString().slice(0, 16);
 };
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = parseISO(dateString.trim());
-        return format(date, "yyyy-MM-dd'T'HH:mm");
-    } catch (error) {
-        console.error("Invalid date format:", error);
-        return '';
-    }
+const dateTimeLocalToIso = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toISOString();
 };
 
-export const transformData = (data: DataRow[]): DataRow[] => {
-    return data.map(row => ({
-        ...row,
-        companySigDate: formatDate(row.companySigDate),
-        employeeSigDate: formatDate(row.employeeSigDate),
-    }));
-};
+export const formatValuesForServer = (values: FormValues): FormValues => ({
+  ...values,
+  companySigDate: values.companySigDate ? dateTimeLocalToIso(values.companySigDate) : '',
+  employeeSigDate: values.employeeSigDate ? dateTimeLocalToIso(values.employeeSigDate) : '',
+});
+
+const formatDateFields = (row: DataRow): DataRow => ({
+  ...row,
+  companySigDate: isoToDateTimeLocal(row.companySigDate),
+  employeeSigDate: isoToDateTimeLocal(row.employeeSigDate),
+});
+
+export const formatRow = (row: DataRow): DataRow => formatDateFields(row);
+export const formatRows = (data: DataRow[]): DataRow[] => data.map(formatDateFields);
