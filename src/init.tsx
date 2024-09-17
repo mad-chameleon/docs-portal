@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { createTheme, ThemeProvider } from '@mui/material';
 import store from './store';
-import AuthContextProvider from './contexts/AuthContext';
+import AuthContextProvider from './AuthContext';
 import App from './components/App';
 
 const init = () => {

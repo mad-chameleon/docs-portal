@@ -6,7 +6,7 @@ import {
 import * as Yup from 'yup';
 import axios from 'axios';
 import routes from '../../routes';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../AuthContext';
 import api from '../../api';
 
 interface LoginFormValues {
@@ -37,6 +37,7 @@ const LoginForm: FC = () => {
     // eslint-disable-next-line
     onSubmit: async (values: LoginFormValues, { setSubmitting }: FormikHelpers<LoginFormValues>) => {
       setSubmitting(true);
+      setFormState({ isError: false, errorMessage: '' });
       try {
         const response = await api.post(routes.signIn(), values);
 

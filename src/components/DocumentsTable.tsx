@@ -1,4 +1,6 @@
-import * as React from 'react';
+import React, {
+  useEffect, useState, useCallback, useRef,
+} from 'react';
 import {
   Box,
   Fab,
@@ -12,7 +14,6 @@ import {
   TableRow,
   TablePagination,
 } from '@mui/material';
-import { useEffect, useState, useCallback } from 'react';
 import {
   Edit as EditIcon, Delete as DeleteIcon, Cancel, CheckCircle, PlaylistAdd,
 } from '@mui/icons-material';
@@ -26,7 +27,7 @@ import { DataRow } from '../interfaces';
 import NotificationBar from './NotificationBar';
 import tableColumnsData from '../tableColumnsData';
 
-const EmployeeTable = () => {
+const DocumentsTable = () => {
   const dispatch = useDispatch();
   const { tableData } = useSelector((state: RootState) => state.table);
   const { currentRowId: RowIndexToEdit } = useSelector((state: RootState) => state.modal);
@@ -36,6 +37,22 @@ const EmployeeTable = () => {
   const [rowIndexToDelete, setRowIndexToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState({ isError: false, errorMessage: '' });
+
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const { target } = event;
+      const clickedOutside = !Object.values(buttonRefs.current)
+        .some((ref) => ref && ref.contains(target as Node));
+      if (clickedOutside) {
+        setRowIndexToDelete(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setPage(0);
@@ -123,19 +140,51 @@ const EmployeeTable = () => {
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     {rowIndexToDelete === row.id ? (
                       <>
-                        <IconButton disabled={isLoading} color="success" aria-label="confirm" size="small" onClick={() => handleDeleteRow(row.id)}>
+                        <IconButton
+                          ref={(el) => { buttonRefs.current.confirm = el; }}
+                          disabled={isLoading}
+                          color="success"
+                          aria-label="confirm"
+                          size="small"
+                          onClick={() => handleDeleteRow(row.id)}
+                        >
                           <CheckCircle fontSize="small" />
                         </IconButton>
-                        <IconButton disabled={isLoading} color="error" aria-label="cancel" size="small" onClick={handleCancelDelete}>
+                        <IconButton
+                          ref={(el) => {
+                            buttonRefs.current.cancel = el;
+                          }}
+                          disabled={isLoading}
+                          color="error"
+                          aria-label="cancel"
+                          size="small"
+                          onClick={handleCancelDelete}
+                        >
                           <Cancel fontSize="small" />
                         </IconButton>
                       </>
                     ) : (
                       <>
-                        <IconButton aria-label="edit" color="secondary" size="small" onClick={() => handleEditRow(row.id)}>
+                        <IconButton
+                          ref={(el) => {
+                            buttonRefs.current.edit = el;
+                          }}
+                          aria-label="edit"
+                          color="secondary"
+                          size="small"
+                          onClick={() => handleEditRow(row.id)}
+                        >
                           <EditIcon fontSize="small" />
                         </IconButton>
-                        <IconButton aria-label="delete" color="info" size="small" onClick={() => handleDeleteRow(row.id)}>
+                        <IconButton
+                          ref={(el) => {
+                            buttonRefs.current.delete = el;
+                          }}
+                          aria-label="delete"
+                          color="info"
+                          size="small"
+                          onClick={() => handleDeleteRow(row.id)}
+                        >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </>
@@ -165,4 +214,4 @@ const EmployeeTable = () => {
   );
 };
 
-export default EmployeeTable;
+export default DocumentsTable;

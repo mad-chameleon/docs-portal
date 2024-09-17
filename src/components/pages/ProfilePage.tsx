@@ -4,7 +4,7 @@ import {
   Box, CircularProgress, Container, Typography,
 } from '@mui/material';
 import axios from 'axios';
-import EmployeeTable from '../EmployeeTable';
+import DocumentsTable from '../DocumentsTable';
 import { setTableData } from '../../store/slices/tableSlice';
 import { RootState } from '../../store';
 import ModalDialog from '../ModalDialog';
@@ -91,7 +91,7 @@ const ProfilePage: React.FC = () => {
             </Typography>
           </Box>
         ) : (
-          <EmployeeTable />
+          <DocumentsTable />
         )}
         { isOpen && <ModalDialog /> }
       </Container>
