@@ -69,7 +69,7 @@ const LoginForm: FC = () => {
       sx={{ mt: 1 }}
     >
       <Typography variant="h3" component="h1" align="center" gutterBottom>
-        Войти
+        Вход
       </Typography>
 
       <TextField
