@@ -127,13 +127,15 @@ const DocumentsTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row) => (
+            {paginatedRows.map((row, index) => (
               <TableRow
+                onDoubleClick={() => handleEditRow(row.id)}
                 key={row.id}
                 sx={{
                   '&:last-child td, &:last-child th': { border: 0 },
                   border: RowIndexToEdit === row.id ? '2px solid green' : 'none',
-                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                  '&:hover': { backgroundColor: 'rgba(189, 189, 189, 0.3)' },
+                  backgroundColor: index % 2 === 1 ? 'transparent' : '#f5f5f5',
                 }}
               >
                 <TableCell>

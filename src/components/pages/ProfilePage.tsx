@@ -54,19 +54,19 @@ const ProfilePage: React.FC = () => {
         setLoading(false);
       }
     };
-    // dispatch(setTableData([
-    //     {
-    //         "id": "7e3d477c-717d-403f-a2c0-3fbfd8c1da6f",
-    //         "documentStatus": "Подписан",
-    //         "employeeNumber": "1234",
-    //         "documentType": "Приказ о приеме",
-    //         "documentName": "Договор 2.pdf",
-    //         "companySignatureName": "Приказ.sig",
-    //         "employeeSignatureName": "Приказ 2.sig",
-    //         "employeeSigDate": "2022-11-24T02:19:27",
-    //         "companySigDate": "2022-11-03T02:19:30"
-    //     }
-    // ]))
+    // dispatch(setTableData(formatRows([
+    //   {
+    //     id: '7e3d477c-717d-403f-a2c0-3fbfd8c1da6f',
+    //     companySigDate: '2022-12-23T11:19:27.017Z\t',
+    //     companySignatureName: 'test',
+    //     documentName: 'test',
+    //     documentStatus: 'test',
+    //     documentType: 'test',
+    //     employeeNumber: 'test',
+    //     employeeSigDate: '2022-12-23T11:19:27.017Z\t',
+    //     employeeSignatureName: 'test',
+    //   },
+    // ])));
     fetchTableData();
   }, [dispatch]);
 
