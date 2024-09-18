@@ -12,6 +12,7 @@ import { formatRows } from '../../utils';
 import api from '../../api';
 import routes from '../../routes';
 import NotificationBar from '../NotificationBar';
+import Navbar from '../Navbar';
 
 const ProfilePage: React.FC = () => {
   const dispatch = useDispatch();
@@ -73,6 +74,7 @@ const ProfilePage: React.FC = () => {
   return (
     <>
       {errorState.isError && <NotificationBar errorMessage={errorState.errorMessage} isOpen />}
+      <Navbar />
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
         {loading ? (
           <Box
