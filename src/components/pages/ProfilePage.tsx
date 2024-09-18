@@ -55,19 +55,7 @@ const ProfilePage: React.FC = () => {
         setLoading(false);
       }
     };
-    // dispatch(setTableData(formatRows([
-    //   {
-    //     id: '7e3d477c-717d-403f-a2c0-3fbfd8c1da6f',
-    //     companySigDate: '2022-12-23T11:19:27.017Z\t',
-    //     companySignatureName: 'test',
-    //     documentName: 'test',
-    //     documentStatus: 'test',
-    //     documentType: 'test',
-    //     employeeNumber: 'test',
-    //     employeeSigDate: '2022-12-23T11:19:27.017Z\t',
-    //     employeeSignatureName: 'test',
-    //   },
-    // ])));
+
     fetchTableData();
   }, [dispatch]);
 

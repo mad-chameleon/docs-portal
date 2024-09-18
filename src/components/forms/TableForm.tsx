@@ -53,15 +53,9 @@ const TableForm = () => {
     setSubmitting(true);
     try {
       const formattedValues = formatValuesForServer(values);
-      console.log({ values, formattedValues });
-
       const url = modalType === 'add' ? routes.addRow() : routes.editRow(currentRowId as string);
       const response = await api.post(url, formattedValues);
-      console.log(response.data.data);
       const formattedRow = formatRow(response.data.data);
-
-      // const formattedRow = formatRow(formattedValues);
-
       if (modalType === 'add') {
         dispatch(addRow(formattedRow));
       } else if (currentRowId !== null) {
@@ -69,7 +63,6 @@ const TableForm = () => {
       }
       dispatch(hideModal());
     } catch (error) {
-      // console.log(values)
       setFormState({
         isError: true,
         errorMessage: 'Ошибка сохранения данных. Попробуйте позже.',
