@@ -152,7 +152,7 @@ const TableForm = () => {
 
   return (
     <>
-      <h2 id="edit-modal-title">{modalType === 'edit' ? 'Редактировать строку' : 'Добавить строку'}</h2>
+      <h2 id="edit-modal-title">{modalType === 'edit' ? 'Редактировать документ' : 'Добавить документ'}</h2>
       {formState.isError && (
         <Alert icon={<ErrorOutline fontSize="inherit" />} severity="error">
           {formState.errorMessage}
