@@ -1,15 +1,6 @@
-export {};
+import dayjs from 'dayjs';
 
-export interface FormValues {
-    companySigDate: string;
-    companySignatureName: string;
-    documentName: string;
-    documentStatus: string;
-    documentType: string;
-    employeeNumber: string;
-    employeeSigDate: string;
-    employeeSignatureName: string;
-}
+export {};
 
 export interface DataRow {
     id: string,
@@ -20,5 +11,16 @@ export interface DataRow {
     documentType: string;
     employeeNumber: string;
     employeeSigDate: string;
+    employeeSignatureName: string;
+}
+
+export interface FormValues {
+    companySigDate: dayjs.Dayjs | null | string;
+    companySignatureName: string;
+    documentName: string;
+    documentStatus: string;
+    documentType: string;
+    employeeNumber: string;
+    employeeSigDate: dayjs.Dayjs | null | string;
     employeeSignatureName: string;
 }

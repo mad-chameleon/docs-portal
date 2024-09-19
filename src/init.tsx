@@ -2,9 +2,12 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { createTheme, ThemeProvider } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import store from './store';
 import AuthContextProvider from './AuthContext';
 import App from './components/App';
+import 'dayjs/locale/ru';
 
 const init = () => {
   const theme = createTheme({
@@ -58,13 +61,15 @@ const init = () => {
   return (
     <React.StrictMode>
       <ThemeProvider theme={theme}>
-        <BrowserRouter>
-          <Provider store={store}>
-            <AuthContextProvider>
-              <App />
-            </AuthContextProvider>
-          </Provider>
-        </BrowserRouter>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+          <BrowserRouter>
+            <Provider store={store}>
+              <AuthContextProvider>
+                <App />
+              </AuthContextProvider>
+            </Provider>
+          </BrowserRouter>
+        </LocalizationProvider>
       </ThemeProvider>
     </React.StrictMode>
   );

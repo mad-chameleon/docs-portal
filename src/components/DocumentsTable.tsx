@@ -89,7 +89,7 @@ const DocumentsTable = () => {
         } else {
           dispatch(removeRow({ id }));
         }
-      } catch {
+      } catch (error) {
         setErrorState({ isError: true, errorMessage: 'Ошибка удаления данных. Попробуйте позже.' });
       } finally {
         setIsLoading(false);
